@@ -6,7 +6,7 @@
 
 **Architecture:** All artifacts are pure configuration and documentation — no source code changes. Files are created in dependency order: shared docs structure first, then Claude Code config, then universal entry point, then update existing files (CLAUDE.md, .gitignore). Everything lands in one branch and one PR.
 
-**Tech Stack:** Claude Code settings.json (JSON), Python 3 (hook script), Markdown (all docs), Git
+**Tech Stack:** Claude Code settings.json (JSON), PowerShell (hook script), Markdown (all docs), Git
 
 **Spec:** `docs/superpowers/specs/2026-05-25-ai-dev-setup-design.md`
 
@@ -15,7 +15,7 @@
 ### Task 1: Create `.claude/` directory and pre-commit hook script
 
 **Files:**
-- Create: `.claude/hooks/pre-commit-build.py`
+- Create: `.claude/hooks/pre-commit-build.ps1`
 
 The hook reads tool input from stdin as JSON. If the Bash command contains `git commit`, it runs `dotnet build`. Non-zero exit blocks the commit.
 
@@ -27,48 +27,47 @@ mkdir -p .claude/hooks
 
 - [ ] **Step 2: Write the hook script**
 
-Create `.claude/hooks/pre-commit-build.py` with this exact content:
+Create `.claude/hooks/pre-commit-build.ps1` with this exact content:
 
-```python
-#!/usr/bin/env python3
-"""
-Claude Code PreToolUse hook.
-Blocks 'git commit' if dotnet build fails.
-Receives Bash tool input on stdin as JSON: {"command": "..."}
-Exit 0 = allow, non-zero = block.
-"""
-import sys
-import json
-import subprocess
+```powershell
+#!/usr/bin/env pwsh
+# Claude Code PreToolUse hook.
+# Blocks 'git commit' if dotnet build fails.
+# Receives Bash tool input on stdin as JSON: {"command": "..."}
+# Exit 0 = allow, non-zero = block.
+# Note: Claude Code runs hooks with CWD = project root, but this script
+# uses $PSScriptRoot to locate GrandNode.sln for robustness.
 
-data = json.load(sys.stdin)
-command = data.get("command", "")
+$inputJson = $input | Out-String
+try {
+    $data = $inputJson | ConvertFrom-Json
+    $command = $data.command
+} catch {
+    exit 0
+}
 
-if "git commit" not in command:
-    sys.exit(0)
+if ($command -notmatch '\bgit\s+commit\b') {
+    exit 0
+}
 
-print("Running pre-commit build check...")
-result = subprocess.run(
-    ["dotnet", "build", "GrandNode.sln", "-c", "Release", "--no-restore"],
-    capture_output=False
-)
-sys.exit(result.returncode)
+[Console]::Error.WriteLine("Running pre-commit build check...")
+& dotnet build "$PSScriptRoot\..\..\GrandNode.sln" -c Release --no-restore
+exit $LASTEXITCODE
 ```
 
 - [ ] **Step 3: Verify the script parses valid JSON without error**
 
 ```bash
-echo '{"command":"git commit -m test"}' | python3 .claude/hooks/pre-commit-build.py
+echo '{"command":"git commit -m test"}' | pwsh -NoProfile -File .claude/hooks/pre-commit-build.ps1
 ```
-Expected: starts dotnet build (will fail or pass depending on build state, that's fine — the point is no Python error)
+Expected: starts dotnet build (will fail or pass depending on build state, that's fine — the point is no PowerShell error)
 
 - [ ] **Step 4: Verify the script exits 0 for non-commit commands**
 
 ```bash
-echo '{"command":"git status"}' | python3 .claude/hooks/pre-commit-build.py
-echo $?
+echo '{"command":"git status"}' | pwsh -NoProfile -File .claude/hooks/pre-commit-build.ps1; Write-Host "Exit: $LASTEXITCODE"
 ```
-Expected output: `0`
+Expected output: `Exit: 0`
 
 ---
 
@@ -99,7 +98,7 @@ Create `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/pre-commit-build.py"
+            "command": "pwsh -NoProfile -NonInteractive -File .claude/hooks/pre-commit-build.ps1"
           }
         ]
       }
@@ -111,14 +110,14 @@ Create `.claude/settings.json`:
 - [ ] **Step 2: Validate JSON syntax**
 
 ```bash
-python3 -c "import json; json.load(open('.claude/settings.json')); print('JSON valid')"
+pwsh -NoProfile -Command "Get-Content '.claude/settings.json' | ConvertFrom-Json | Out-Null; Write-Host 'JSON valid'"
 ```
 Expected: `JSON valid`
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add .claude/settings.json .claude/hooks/pre-commit-build.py
+git add .claude/settings.json .claude/hooks/pre-commit-build.ps1
 git commit -m "Add Claude Code settings with permissions and pre-commit build hook"
 ```
 
