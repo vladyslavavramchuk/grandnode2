@@ -381,3 +381,6 @@ src/Web/Grand.Web.Store/Plugins/*
 src/Web/Grand.Web.Store/Modules/*
 src/Web/Grand.Web.Store/App_Data/DataProtectionKeys/*
 src/Web/Grand.Web.Store/wwwroot/assets/images/thumbs/*.**
+
+# Claude Code local overrides (personal preferences, stay off the repo)
+.claude/settings.local.json
