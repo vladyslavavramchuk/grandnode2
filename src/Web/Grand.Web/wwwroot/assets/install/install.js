@@ -55,3 +55,68 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleMongoDBConnectionInfo();
     }
 });
+
+// Welcome popup — shown once per browser session
+(function () {
+    var SESSION_KEY = 'installPopupDismissed';
+
+    function showPopup() {
+        var overlay = document.getElementById('install-overlay');
+        var popup = document.getElementById('install-popup');
+        if (!overlay || !popup) return;
+
+        overlay.style.display = 'flex';
+        popup.classList.add('install-popup--entering');
+
+        popup.addEventListener('animationend', function onEnter() {
+            popup.classList.remove('install-popup--entering');
+            popup.removeEventListener('animationend', onEnter);
+        });
+    }
+
+    function hidePopup() {
+        var overlay = document.getElementById('install-overlay');
+        var popup = document.getElementById('install-popup');
+        if (!overlay || !popup) return;
+
+        popup.classList.remove('install-popup--entering');
+        popup.classList.add('install-popup--leaving');
+
+        var animDuration = (parseFloat(getComputedStyle(popup).animationDuration) || 0) * 1000;
+        var fallback = setTimeout(function () {
+            overlay.style.display = 'none';
+            popup.classList.remove('install-popup--leaving');
+            try {
+                sessionStorage.setItem(SESSION_KEY, '1');
+            } catch (e) { /* sessionStorage unavailable — silent fail */ }
+        }, animDuration + 50);
+
+        popup.addEventListener('animationend', function onLeave() {
+            clearTimeout(fallback);
+            overlay.style.display = 'none';
+            popup.classList.remove('install-popup--leaving');
+            popup.removeEventListener('animationend', onLeave);
+            try {
+                sessionStorage.setItem(SESSION_KEY, '1');
+            } catch (e) { /* sessionStorage unavailable — silent fail */ }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var closeBtn = document.getElementById('install-popup-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', hidePopup);
+        }
+
+        var shouldShow = false;
+        try {
+            shouldShow = !sessionStorage.getItem(SESSION_KEY);
+        } catch (e) {
+            shouldShow = true; // sessionStorage unavailable: show popup anyway
+        }
+
+        if (shouldShow) {
+            showPopup();
+        }
+    });
+}());
