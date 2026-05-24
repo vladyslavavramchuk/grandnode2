@@ -3016,3 +3016,87 @@ html.ie .spinner circle{stroke-dashoffset:80px}
         text-align: center;
     }
 }
+
+/* ========================================
+   Install Welcome Popup
+   ======================================== */
+
+.install-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    overflow-y: auto;
+    align-items: center;
+    justify-content: center;
+}
+
+.install-popup {
+    background: #f0f0f0;
+    border-radius: 12px;
+    width: 480px;
+    max-width: 90vw;
+    min-width: 360px;
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    box-sizing: border-box;
+}
+
+.install-popup__text {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333333;
+}
+
+.install-popup__close {
+    background: #cccccc;
+    color: #000000;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.15s;
+}
+
+.install-popup__close:hover {
+    background: #bbbbbb;
+}
+
+@keyframes install-slide-up {
+    from { transform: translateY(80px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+@-webkit-keyframes install-slide-up {
+    from { -webkit-transform: translateY(80px); opacity: 0; }
+    to   { -webkit-transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes install-slide-down {
+    from { transform: translateY(0);    opacity: 1; }
+    to   { transform: translateY(80px); opacity: 0; }
+}
+
+@-webkit-keyframes install-slide-down {
+    from { -webkit-transform: translateY(0);    opacity: 1; }
+    to   { -webkit-transform: translateY(80px); opacity: 0; }
+}
+
+.install-popup--entering {
+    animation: install-slide-up 0.35s ease-out forwards;
+}
+
+.install-popup--leaving {
+    animation: install-slide-down 0.3s ease-in forwards;
+}
