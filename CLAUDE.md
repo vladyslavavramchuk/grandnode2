@@ -140,3 +140,23 @@ Common shared MSBuild properties (target framework, nullable, implicit usings) a
 - Code coverage: coverlet
 - Test project naming: `Grand.{Layer}.Tests` under `src/Tests/`
 - MongoDB must be running for data-layer integration tests; business logic tests mock the repository
+
+## AI Workflow
+
+This repository uses **Claude Code + Superpowers** for AI-assisted feature development. The standard cycle for any new feature:
+
+1. **Brainstorm** (`superpowers:brainstorming`) — clarify requirements, propose approaches, produce a design spec saved to `docs/superpowers/specs/`
+2. **Plan** (`superpowers:writing-plans`) — generate a step-by-step implementation plan saved to `docs/superpowers/plans/`
+3. **Implement** (`superpowers:subagent-driven-development` or `superpowers:executing-plans`) — execute the plan task-by-task using TDD
+4. **Review** (`superpowers:requesting-code-review`) — verify the implementation before merging
+5. **Finish** (`superpowers:finishing-a-development-branch`) — create the PR targeting `ai-test/develop`
+
+All PRs target the `ai-test/develop` branch on `vladyslavavramchuk/grandnode2`.
+
+## Docs
+
+| Path | Contents |
+|------|----------|
+| `docs/adr/` | Architecture Decision Records |
+| `docs/superpowers/specs/` | AI-generated feature design specs |
+| `docs/superpowers/plans/` | AI-generated implementation plans |
